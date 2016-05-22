@@ -1,0 +1,23 @@
+<div class="col-md-12">
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">各个机房入口</h3>
+        </div>
+        <div class="panel-body">
+            <div class="col-md-8">
+            {% for idc in idcs %}
+                {% if idc.online == 1 %}
+                    <a role="button" href="{{ idc.address }}" target="_blank" class="btn btn-success btn-lg">{{ idc.idc }}</a>
+                {% endif %}
+            {% endfor %}
+            </div>
+            <div class="col-md-4">
+            {% for idc in idcs %}
+                {% if idc.online == 0 %}
+                    <a role="button" href="{{ idc.address }}" target="_blank" class="btn btn-warning btn-lg">{{ idc.idc }}</a>
+                {% endif %}
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

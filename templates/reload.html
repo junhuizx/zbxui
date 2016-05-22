@@ -1,0 +1,32 @@
+{% load dashboard %}
+<div class="panel panel-info zabbix_issue">
+    <div class="panel-heading">
+        <h3 class="panel-title">各个机房入问题总汇</h3>
+    </div>
+    <div class="panel-body">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>级别</th>
+                    <th>IDC</th>
+                    <th>Hostname</th>
+                    <th>描述</th>
+                    <th>发生时间</th>
+                    <th>持续时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr bgcolor={{ issue.priority|issue_color }}>
+                    <td bgcolor={{ issue.priority|issue_color }}> {{ issue.priority|issue_priority }} </td>
+                    <td>{{ issue.idc }}</td>
+                    <td>{{ issue.host }}</td>
+                    <td>{{ issue.description }}</td>
+                    <td>{{ issue.lastchange|date:'Y-m-d H:i:s'}}</td>
+                    <td>{{ issue.lastchange|issue_age }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
