@@ -66,6 +66,7 @@ class Zabbix:
                                       "filter": {
                                                  "value": 1
                                                  },
+                                      "active":True,
                                       "selectHosts":"extend",
                                       "sortfield": "priority",
                                       "sortorder": "DESC"
