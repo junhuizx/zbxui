@@ -1,44 +1,91 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static "js/jquery-multi-select/css/multi-select.css" %}" />
+{% endblock %}
+
 {% block title %}
     <title>添加用户</title>
 {% endblock %}
 
 {% block body %}
     <div class="row">
-        <div class="col-lg-2"></div>
-        <div class="col-lg-8">
+        <div class="col-lg-3"></div>
+        <div class="col-lg-6">
             <section class="panel">
-{#                <header class="panel-heading">#}
-{#                    Basic Forms#}
-{#                </header>#}
                 <div class="panel-body">
-                    <form role="form">
+                    <form action="{% url 'zabbix:adduser' %}" method="post">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
                         <div class="form-group">
-                            <label for="exampleInputEmail1">Email address</label>
-                            <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">
+                            <label class="control-label">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            {% for error in form.username.errors %}
+                                <div class="has-error">
+                                    <p class="help-block">{{ error }}</p>
+                                </div>
+                            {% endfor %}
                         </div>
+
                         <div class="form-group">
-                            <label for="exampleInputPassword1">Password</label>
-                            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+                            <label class="control-label">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% for error in form.name.errors %}
+                                <div class="has-error">
+                                    <p class="help-block">{{ error }}</p>
+                                </div>
+                            {% endfor %}
                         </div>
+
                         <div class="form-group">
-                            <label for="exampleInputFile">File input</label>
-                            <input type="file" id="exampleInputFile">
-                            <p class="help-block">Example block-level help text here.</p>
+                            <label class="control-label">{{ form.tele.label }}</label>
+                            {{ form.tele }}
+                            {% for error in form.tele.errors %}
+                                <div class="has-error">
+                                    <p class="help-block">{{ error }}</p>
+                                </div>
+                            {% endfor %}
                         </div>
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"> Check me out
-                            </label>
+
+                        <div class="form-group">
+                            <label class="control-label">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% for error in form.email.errors %}
+                                <div class="has-error">
+                                    <p class="help-block">{{ error }}</p>
+                                </div>
+                            {% endfor %}
                         </div>
-                        <button type="submit" class="btn btn-primary">Submit</button>
+
+                        <div class="form-group">
+                            <label for="exampleInputFile">{{ form.usergroups.label }}</label>
+                            {{ form.usergroups }}
+                            {% for error in form.usergroups.errors %}
+                                <div class="has-error">
+                                    <p class="help-block">{{ error }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <hr>
+
+                        <div class="form-group">
+{#                            <label class="control-label"></label>#}
+                            <button type="submit" class="btn btn-primary"> 修改 </button>
+                            <a role="button" href="{% url 'zabbix:index' %}" class="btn btn-default"> 取消 </a>
+                        </div>
                     </form>
 
                 </div>
             </section>
         </div>
-        <div class="col-lg-2"></div>
+        <div class="col-lg-4"></div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript" src="{% static "js/jquery-multi-select/js/jquery.multi-select.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery-multi-select/js/jquery.quicksearch.js" %}"></script>
+    <script src="{% static "js/multi-select-init.js" %}"></script>
 {% endblock %}

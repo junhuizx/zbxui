@@ -10,6 +10,9 @@
   {% block title %}
 
   {% endblock %}
+
+    {% block css %}
+    {% endblock %}
   <link href="{% static "css/style.css" %}" rel="stylesheet">
   <link href="{% static "css/style-responsive.css" %}" rel="stylesheet">
 
@@ -50,6 +53,9 @@
 <script src="{% static "js/modernizr.min.js" %}"></script>
 <script src="{% static "js/jquery.nicescroll.js" %}"></script>
 
+
+{% block js %}
+{% endblock %}
 <!--common scripts for all pages-->
 <script src="{% static "js/scripts.js" %}"></script>
 

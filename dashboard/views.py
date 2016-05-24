@@ -17,13 +17,35 @@ from forms import UserForm
 from pyzabbix import ZabbixAPI
 
 
+def get_usergroups(group):
+    if group == '0':
+        return u'监控管理员'
+    elif group == '1':
+        return u'Ceph管理员'
+    elif group == '2':
+        return u'HA管理员'
+    elif group == '3':
+        return u'MySQL管理员'
+    elif group == '4':
+        return u'OpenStack管理员'
+    elif group == '5':
+        return u'RabbitMQ管理员'
+    elif group == '6':
+        return u'经理'
+    elif group == '7':
+        return u'运营维护'
+    elif group == '8':
+        return u'其他'
+    else:
+        pass
+
+
 # Create your views here.
 class ZabbixClinet(object):
     def __init__(self, idc, address, username, password):
         self.idc = idc
         try:
-            self.zbx_api = ZabbixAPI(address)
-            self.zbx_api.login(username, password)
+            self.zbx_api = ZabbixAPI(url=address, user=username, password=password)
         except Exception, error:
             raise Exception
 
@@ -112,8 +134,12 @@ class ZabbixClinet(object):
                                 'period': '1-7,00:00-24:00'})
 
         usrgrps = []
+
+        print user
+
         if user.get('usergroups'):
             for usergroup in user['usergroups']:
+                print usergroup
                 group = self.zbx_api.usergroup.get(filter={'name': usergroup})
                 if len(group) == 1:
                     usrgrps.append({'usrgrpid': group[0]['usrgrpid']})
@@ -148,7 +174,6 @@ class IndexView(TemplateView):
         return context
 
 class ReloadView(View):
-
     def get(self, request, *args, **kwargs):
         try:
             zabbixs = []
@@ -181,7 +206,19 @@ class UserAddView(FormView):
     def post(self, request, *args, **kwargs):
         form = UserForm(request.POST)
         if form.is_valid():
-            pass
+            username = form.cleaned_data['username']
+            name = form.cleaned_data['name']
+            tele = form.cleaned_data['tele']
+            email = form.cleaned_data['email']
+            usergroups = form.cleaned_data['usergroups']
+
+            zabbixs =[]
+            for zabbix in settings.ZABBIX_LIST:
+                zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+
+            for zabbix in zabbixs:
+                zabbix.user_create(user={'username':username, 'name':name, 'tel':tele, 'email':email, 'usergroups':[get_usergroups(usergroup) for usergroup in usergroups]})
+
         else:
             return self.form_invalid(form=form)
 
