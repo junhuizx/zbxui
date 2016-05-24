@@ -9,141 +9,122 @@ from urllib2 import URLError
 from django.http import HttpResponse
 from django.conf import settings
 from django.template import Context, loader
-# Create your views here.
-
+from django.core.urlresolvers import reverse_lazy
 from django.views.generic import FormView, RedirectView, TemplateView, ListView, DetailView,View
 
-class Zabbix:
+from forms import UserForm
+
+from pyzabbix import ZabbixAPI
+
+
+# Create your views here.
+class ZabbixClinet(object):
     def __init__(self, idc, address, username, password):
         self.idc = idc
-        self.address = address
-        self.username = username
-        self.password = password
-
-        self.url = '%s/api_jsonrpc.php' % self.address
-        self.header = {"Content-Type":"application/json"}
-
-        self.user_login()
-
-    def user_login(self):
-        data = json.dumps({
-                           "jsonrpc": "2.0",
-                           "method": "user.login",
-                           "params": {
-                                      "user": self.username,
-                                      "password": self.password
-                                      },
-                           "id": 0
-                           })
-
-        request = urllib2.Request(self.url, data)
-        for key in self.header:
-            request.add_header(key, self.header[key])
-
         try:
-            result = urllib2.urlopen(request)
-        except URLError as e:
-            raise URLError
-        else:
-            response = json.loads(result.read())
-            # import pprint
-            # pprint.pprint(response)
-            result.close()
-            self.authID = response['result']
-            return self.authID
+            self.zbx_api = ZabbixAPI(address)
+            self.zbx_api.login(username, password)
+        except Exception, error:
+            raise Exception
 
     def trigger_get(self):
-        data = json.dumps({
-                           "jsonrpc":"2.0",
-                           "method":"trigger.get",
-                           "params": {
-                                      "output": [
-                                                "triggerid",
-                                                "description",
-                                                "priority",
-                                                "lastchange"
-                                                ],
-                                      "filter": {
-                                                 "value": 1
-                                                 },
-                                      "active":True,
-                                      "selectHosts":"extend",
-                                      "sortfield": "priority",
-                                      "sortorder": "DESC"
-                                    },
-                           "auth": self.authID,
-                           "id":1
-        })
+        results = self.zbx_api.trigger.get(output=["triggerid", "description", "priority", "lastchange"],
+                                           filter={"value": 1},
+                                           active=True,
+                                           selectHosts="extend")
 
-        request = urllib2.Request(self.url, data)
-        for key in self.header:
-            request.add_header(key, self.header[key])
+        triggers = []
+        if results:
+            for result in results:
+                for host in result['hosts']:
+                    trigger = {'idc': self.idc,
+                               'host': host['host'],
+                               'priority': result['priority'],
+                               'description': result['description'],
+                               'lastchange': datetime.datetime.fromtimestamp((int(result['lastchange'])))}
+                    triggers.append(trigger)
 
-        try:
-            result = urllib2.urlopen(request)
-        except URLError as e:
-            raise URLError
-        else:
-            response = json.loads(result.read())
-            result.close()
-            results = response['result']
-            issues = []
-            if result:
-                for result in results:
-                    for host in result['hosts']:
-                        issue = {'idc':self.idc,
-                                 'host':host['host'],
-                                 'priority':result['priority'],
-                                 'description':result['description'],
-                                 'lastchange':datetime.datetime.fromtimestamp((int(result['lastchange'])))}
-                        issues.append(issue)
-            return issues
+        return triggers
 
     def triggerprototype_get(self):
-        data = json.dumps({
-                           "jsonrpc":"2.0",
-                           "method":"triggerprototype.get",
-                           "params": {
-                                      "output": [
-                                                "triggerid",
-                                                "description",
-                                                "priority",
-                                                "lastchange"
-                                                ],
-                                      "filter": {
-                                                 "value": 1
-                                                 },
-                                      "selectHosts":"extend",
-                                      "sortfield": "priority",
-                                      "sortorder": "DESC"
-                                    },
-                           "auth": self.authID,
-                           "id":1
-        })
+        results = self.zbx_api.triggerprototype.get(output=["triggerid", "description", "priority", "lastchange"],
+                                           filter={"value": 1},
+                                           active=True,
+                                           selectHosts="extend")
 
-        request = urllib2.Request(self.url, data)
-        for key in self.header:
-            request.add_header(key, self.header[key])
+        triggers = []
+        if results:
+            for result in results:
+                for host in result['hosts']:
+                    trigger = {'idc': self.idc,
+                               'host': host['host'],
+                               'priority': result['priority'],
+                               'description': result['description'],
+                               'lastchange': datetime.datetime.fromtimestamp((int(result['lastchange'])))}
+                    triggers.append(trigger)
 
-        try:
-            result = urllib2.urlopen(request)
-        except URLError as e:
-            print "Error as ", e
-        else:
-            response = json.loads(result.read())
-            result.close()
-            results = response['result']
-            issues = []
-            if result:
-                for result in results:
-                    for host in result['hosts']:
-                        issue = {'idc':self.idc,
-                                 'host':host['host'],
-                                 'priority':result['priority'],
-                                 'description':result['description'],
-                                 'lastchange':datetime.datetime.fromtimestamp((int(result['lastchange'])))}
-                        issues.append(issue)
-            return issues
+        return triggers
+
+    def item_get(self, applications, keywords):
+        results = self.zbx_api.item.get(output="extend",
+                                        application=applications,
+                                        search={'key_': keywords},
+                                        sortfield='lastvalue')
+
+        lastvalues = []
+        if results:
+            for result in results:
+                lastvalue={'uuid': result['name'].split(' ')[0],
+                           'lastclock': result['lastclock'],
+                           'lastvalue': result['lastvalue']}
+                lastvalues.append(lastvalue)
+
+        return lastvalues
+
+    def user_create(self, user):
+        '''
+        Create user with media type and group
+        :param user:{
+                        'username':'zabbixtest',
+                        'name':'Zabbix',
+                        'email':'zabbix@newtouch.com',
+                        'tel':'18888888888',
+                        'usergroups':['Zabbix administrators']}
+
+        :return: user id
+        '''
+        user_medias = []
+        mediatype_email = self.zbx_api.mediatype.get(filter={'description': 'Email'})
+        if len(mediatype_email) == 1:
+            user_medias.append({'mediatypeid': mediatype_email[0]['mediatypeid'],
+                                'sendto': user['email'],
+                                'active': 0,
+                                'severity': 63,
+                                'period': '1-7,00:00-24:00'})
+
+        mediatype_tel = self.zbx_api.mediatype.get(filter={'description': 'SMS-Script'})
+
+        if len(mediatype_tel) == 1:
+            user_medias.append({'mediatypeid': mediatype_tel[0]['mediatypeid'],
+                                'sendto': user['tel'],
+                                'active': 0,
+                                'severity': 63,
+                                'period': '1-7,00:00-24:00'})
+
+        usrgrps = []
+        if user.get('usergroups'):
+            for usergroup in user['usergroups']:
+                group = self.zbx_api.usergroup.get(filter={'name': usergroup})
+                if len(group) == 1:
+                    usrgrps.append({'usrgrpid': group[0]['usrgrpid']})
+
+        user_id = self.zbx_api.user.create({'alias': user['username'],
+                                            'name': user['name'],
+                                            'passwd': 'newtouch',
+                                            'usrgrps':usrgrps,
+                                            'user_medias': user_medias})
+
+        return user_id
 
 class IndexView(TemplateView):
     template_name = 'dashboard.html'
@@ -153,7 +134,7 @@ class IndexView(TemplateView):
         zabbixs = []
         issues = []
         for zabbix in settings.ZABBIX_LIST:
-            zabbixs.append(Zabbix(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+            zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
 
         for zabbix in zabbixs:
             issues.extend(zabbix.trigger_get())
@@ -161,13 +142,10 @@ class IndexView(TemplateView):
 
         issues.sort(key=lambda k:k['lastchange'], reverse=True)
         context['issues'] = issues
+        context['updatetime'] = datetime.datetime.now()
         context['idcs'] = settings.ZABBIX_LIST
 
         return context
-
-
-class LoginView(TemplateView):
-    template_name = 'login.html'
 
 class ReloadView(View):
 
@@ -176,7 +154,7 @@ class ReloadView(View):
             zabbixs = []
             issues = []
             for zabbix in settings.ZABBIX_LIST:
-                zabbixs.append(Zabbix(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+                zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
 
             for zabbix in zabbixs:
                 issues.extend(zabbix.trigger_get())
@@ -184,7 +162,7 @@ class ReloadView(View):
 
             issues.sort(key=lambda k:k['lastchange'], reverse=True)
 
-            context = Context({'issues':issues})
+            context = Context({'issues':issues,'updatetime':datetime.datetime.now()})
 
             issues = loader.get_template('reload.html').render(context)
             data = {'flag':'success', 'issues':issues}
@@ -193,3 +171,18 @@ class ReloadView(View):
             data = {'flag':'fail','issues':''}
 
         return HttpResponse(json.dumps(data), content_type='application/json')
+
+
+class UserAddView(FormView):
+    template_name = 'add_user.html'
+    form_class = UserForm
+    success_url = reverse_lazy('zabbix:index')
+
+    def post(self, request, *args, **kwargs):
+        form = UserForm(request.POST)
+        if form.is_valid():
+            pass
+        else:
+            return self.form_invalid(form=form)
+
+        return super(UserAddView, self).post(request, *args, **kwargs)
