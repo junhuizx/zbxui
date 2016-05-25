@@ -5,7 +5,7 @@ import json
 import urllib2
 import datetime
 
-from urllib2 import URLError
+from django.forms.utils import ErrorList
 from django.http import HttpResponse
 from django.conf import settings
 from django.template import Context, loader
@@ -45,7 +45,7 @@ class ZabbixClinet(object):
     def __init__(self, idc, address, username, password):
         self.idc = idc
         try:
-            self.zbx_api = ZabbixAPI(url=address, user=username, password=password)
+            self.zbx_api = ZabbixAPI(address, username, password)
         except Exception, error:
             raise Exception
 
@@ -96,7 +96,8 @@ class ZabbixClinet(object):
         lastvalues = []
         if results:
             for result in results:
-                lastvalue={'uuid': result['name'].split(' ')[0],
+                lastvalue={'idc': self.idc,
+                           'uuid': result['name'].split(' ')[0],
                            'lastclock': result['lastclock'],
                            'lastvalue': result['lastvalue']}
                 lastvalues.append(lastvalue)
@@ -211,6 +212,12 @@ class UserAddView(FormView):
             tele = form.cleaned_data['tele']
             email = form.cleaned_data['email']
             usergroups = form.cleaned_data['usergroups']
+            key = form.cleaned_data['key']
+
+            if key != 'ac5b4a2f96cc':
+                errors = form._errors.setdefault("key", ErrorList())
+                errors.append(u"认证码不正确，请向监控管理员索要！")
+                return self.form_invalid(form=form)
 
             zabbixs =[]
             for zabbix in settings.ZABBIX_LIST:

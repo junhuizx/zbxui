@@ -109,8 +109,8 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 #                {'idc':'公司测试', 'address':'http://58.247.8.188:10007/', 'username':'Admin', 'password':'zabbix', 'online':False}
 # ]
 
-ZABBIX_LIST = [{'idc':'周浦一期', 'address':'http://114.80.52.192:30119/', 'username':'zbxui', 'password':'zbxui', 'online':True},
-               {'idc':'斐讯一期', 'address':'http://218.245.64.3:10005/', 'username':'zbxui', 'password':'zbxui', 'online':True},
-               {'idc':'大连一期', 'address':'http://218.60.94.16/', 'username':'zbxui', 'password':'zbxui', 'online':True},
-               {'idc':'华通一期', 'address':'http://101.227.185.101:20021/', 'username':'zbxui', 'password':'zbxui', 'online':False},
+ZABBIX_LIST = [{'idc':'周浦一期', 'address':'http://114.80.52.192:30119/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':True},
+               {'idc':'斐讯一期', 'address':'http://218.245.64.3:10005/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':True},
+               {'idc':'大连一期', 'address':'http://218.60.94.16/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':True},
+               {'idc':'华通一期', 'address':'http://101.227.185.101:20021/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':False},
 ]

@@ -39,5 +39,11 @@ class UserForm(forms.Form):
                                            widget=forms.SelectMultiple(attrs={'class': 'multi-select',
                                                                               'id':"my_multi_select3",}))
 
+    key = forms.CharField(max_length=100,
+                               label='认证码',
+                               required=True,
+                               widget=forms.TextInput(attrs={'class' : 'form-control',
+                                                             'type': 'text'}))
+
 
 
