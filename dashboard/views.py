@@ -4,6 +4,7 @@ from django.shortcuts import render
 import json
 import urllib2
 import datetime
+import logging
 
 from django.forms.utils import ErrorList
 from django.http import HttpResponse
@@ -45,8 +46,10 @@ class ZabbixClinet(object):
     def __init__(self, idc, address, username, password):
         self.idc = idc
         try:
-            self.zbx_api = ZabbixAPI(address, username, password)
+            self.zbx_api = ZabbixAPI(address)
+            self.zbx_api.login(username, password)
         except Exception, error:
+            # logging.warning(error)
             raise Exception
 
     def trigger_get(self):
@@ -169,7 +172,7 @@ class IndexView(TemplateView):
 
         issues.sort(key=lambda k:k['lastchange'], reverse=True)
         context['issues'] = issues
-        context['updatetime'] = datetime.datetime.now()
+        # context['updatetime'] = datetime.datetime.now()
         context['idcs'] = settings.ZABBIX_LIST
 
         return context
@@ -188,7 +191,7 @@ class ReloadView(View):
 
             issues.sort(key=lambda k:k['lastchange'], reverse=True)
 
-            context = Context({'issues':issues,'updatetime':datetime.datetime.now()})
+            context = Context({'issues':issues})
 
             issues = loader.get_template('reload.html').render(context)
             data = {'flag':'success', 'issues':issues}

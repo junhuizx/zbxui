@@ -10,11 +10,15 @@
         {% include 'entry.html' %}
     </div>
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-8">
             {% include 'reload.html' %}
         </div>
-        <!--div class="col-md-4">
+        <div class="col-md-4">
             {% include 'clock.html' %}
-        </div-->
+        </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static "js/clock.js" %}"></script>
 {% endblock %}

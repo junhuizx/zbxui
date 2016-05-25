@@ -4,7 +4,7 @@
 
 // inner variables
 var canvas, ctx;
-var clockRadius = 250;
+var clockRadius = 200;
 var clockImage;
 
 // draw functions :
@@ -28,7 +28,7 @@ function drawScene() { // main drawScene function
     ctx.save();
 
     // draw clock image (as background)
-    ctx.drawImage(clockImage, 0, 0, 500, 500);
+    ctx.drawImage(clockImage, 0, 0, 400, 400);
 
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.beginPath();
