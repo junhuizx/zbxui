@@ -52,6 +52,9 @@ class ZabbixClinet(object):
             # logging.warning(error)
             raise Exception
 
+    def user_logout(self):
+        return self.zbx_api.user.logout()
+
     def trigger_get(self):
         results = self.zbx_api.trigger.get(output=["triggerid", "description", "priority", "lastchange"],
                                            filter={"value": 1},
@@ -93,19 +96,20 @@ class ZabbixClinet(object):
     def item_get(self, applications, keywords):
         results = self.zbx_api.item.get(output="extend",
                                         application=applications,
-                                        search={'key_': keywords},
-                                        sortfield='lastvalue')
+                                        search={'name': keywords},
+                                        sortfield='name')
 
-        lastvalues = []
-        if results:
-            for result in results:
-                lastvalue={'idc': self.idc,
-                           'uuid': result['name'].split(' ')[0],
-                           'lastclock': result['lastclock'],
-                           'lastvalue': result['lastvalue']}
-                lastvalues.append(lastvalue)
-
-        return lastvalues
+        return results
+        # lastvalues = []
+        # if results:
+        #     for result in results:
+        #         lastvalue={'idc': self.idc,
+        #                    'uuid': result['name'].split(' ')[0],
+        #                    'lastclock': result['lastclock'],
+        #                    'lastvalue': result['lastvalue']}
+        #         lastvalues.append(lastvalue)
+        #
+        # return lastvalues
 
     def user_create(self, user):
         '''
@@ -169,6 +173,7 @@ class IndexView(TemplateView):
         for zabbix in zabbixs:
             issues.extend(zabbix.trigger_get())
             # issues.extend(zabbix.triggerprototype_get())
+            zabbix.user_logout()
 
         issues.sort(key=lambda k:k['lastchange'], reverse=True)
         context['issues'] = issues
@@ -188,6 +193,7 @@ class ReloadView(View):
             for zabbix in zabbixs:
                 issues.extend(zabbix.trigger_get())
                 # issues.extend(zabbix.triggerprototype_get())
+                zabbix.user_logout()
 
             issues.sort(key=lambda k:k['lastchange'], reverse=True)
 
@@ -228,8 +234,107 @@ class UserAddView(FormView):
 
             for zabbix in zabbixs:
                 zabbix.user_create(user={'username':username, 'name':name, 'tel':tele, 'email':email, 'usergroups':[get_usergroups(usergroup) for usergroup in usergroups]})
+                zabbix.user_logout()
 
         else:
             return self.form_invalid(form=form)
 
         return super(UserAddView, self).post(request, *args, **kwargs)
+
+class OverView(object):
+    def __init__(self, idc, total, running):
+        self.idc = idc
+        self.total = total
+        self.running = running
+        self.other = total - running
+
+class Speed(object):
+    def __init__(self, idc, uuid, clock, speed):
+        self.idc = idc
+        self.uuid = uuid
+        self.clock = clock
+        self.speed = speed
+
+class Top(object):
+    def __init__(self,speeds):
+        self.disk_read = self.get_top('DiskRead', speeds)
+        self.disk_write = self.get_top('DiskWrite', speeds)
+        self.interface_read = self.get_top('InterfaceRead', speeds)
+        self.interface_write = self.get_top('InterfaceWrite', speeds)
+
+    def get_top(self, keyword, speeds):
+        re_list = []
+        for speed in speeds:
+            if keyword == (speed['name'].split(' ')[1] + speed['name'].split(' ')[2]):
+                re = Speed(speed['idc'], speed['name'].split(' ')[0], speed['lastclock'], speed['lastvalue'])
+                re_list.append(re)
+
+        re_list.sort(key=lambda k:k.speed, reverse=True)
+        return re_list[0:10]
+
+class TopView(ListView):
+    template_name = 'top.html'
+    queryset = []
+
+    def get_context_data(self, **kwargs):
+        context = super(TopView, self).get_context_data(**kwargs)
+
+        zabbixs =[]
+        for zabbix in settings.ZABBIX_LIST:
+            if zabbix['online'] is True:
+                zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+
+        overviews = []
+        # speeds = []
+        for zabbix in zabbixs:
+            instances = zabbix.item_get('Instances', 'State')
+            instances_running =[]
+            instances_deleted = []
+            for instance in instances:
+                if instance['lastvalue'] == 'running':
+                    instances_running.append(instance)
+                elif instance['lastvalue'] == 'deleted':
+                    instances_deleted.append(instance)
+                else:
+                    pass
+
+            overview = OverView(zabbix.idc, len(instances) - len(instances_deleted), len(instances_running))
+            overviews.append(overview)
+
+            zabbix.user_logout()
+
+            # speed = zabbix.item_get('Instances', 'Speed')
+            # for i in range(len(speed)):
+            #     speed[i]['idc'] = zabbix.idc
+            #
+            # speeds.extend(speed)
+        #
+        # top = Top(speeds)
+
+        context['overviews'] = overviews
+        # context['top'] = top
+
+        return context
+
+class TopReloadView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            zabbixs = []
+            top = []
+            for zabbix in settings.ZABBIX_LIST:
+                zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+
+            top = []
+            for zabbix in zabbixs:
+                pass
+                # issues.extend(zabbix.triggerprototype_get()
+
+            context = Context({'top':top})
+
+            issues = loader.get_template('top_reload.html').render(context)
+            data = {'flag':'success', 'top':top}
+
+        except Exception, error:
+            data = {'flag':'fail','issues':''}
+
+        return HttpResponse(json.dumps(data), content_type='application/json')

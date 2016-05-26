@@ -1,0 +1,122 @@
+<div class="top-reload">
+    <div class="row">
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Disk Read Speed
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>IDC</th>
+                            <th>UUID</th>
+                            <th>Last Value</th>
+                            <th>Time</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for speed in top.disk_read %}
+                        <tr>
+                            <td>{{ speed.idc }}</td>
+                            <td>{{ speed.uuid }}</td>
+                            <td>{{ speed.speed }}</td>
+                            <td>{{ speed.clock }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Disk Write Speed
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>IDC</th>
+                            <th>UUID</th>
+                            <th>Last Value</th>
+                            <th>Time</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for speed in top.disk_write %}
+                        <tr>
+                            <td>{{ speed.idc }}</td>
+                            <td>{{ speed.uuid }}</td>
+                            <td>{{ speed.speed }}</td>
+                            <td>{{ speed.clock }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Interface Read Speed
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>IDC</th>
+                            <th>UUID</th>
+                            <th>Last Value</th>
+                            <th>Time</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for speed in top.interface_read %}
+                        <tr>
+                            <td>{{ speed.idc }}</td>
+                            <td>{{ speed.uuid }}</td>
+                            <td>{{ speed.speed }}</td>
+                            <td>{{ speed.clock }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Interface Write Speed
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>IDC</th>
+                            <th>UUID</th>
+                            <th>Last Value</th>
+                            <th>Time</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for speed in top.interface_read %}
+                        <tr>
+                            <td>{{ speed.idc }}</td>
+                            <td>{{ speed.uuid }}</td>
+                            <td>{{ speed.speed }}</td>
+                            <td>{{ speed.clock }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

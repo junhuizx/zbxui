@@ -1,0 +1,25 @@
+<div class="col-md-12">
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">各个机房实例概要</h3>
+        </div>
+        <div class="panel-body">
+            {% for overview in overviews %}
+                <div class="row alert alert-info">
+                    <div class="col-lg-3">
+                        机房: {{ overview.idc }}
+                    </div>
+                    <div class="col-lg-3">
+                        总数: {{ overview.total }}
+                    </div>
+                    <div class="col-lg-3">
+                        运行中: {{ overview.running }}
+                    </div>
+                    <div class="col-lg-3">
+                        其他: {{ overview.other }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

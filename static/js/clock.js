@@ -94,7 +94,9 @@ $(function(){
     // var height = canvas.height;
 
 clockImage = new Image();
+//clockImage.src = './clock.png';
 clockImage.src = 'http://static.oschina.net/uploads/space/2012/0712/125855_nnla_89964.png';
+//clockImage.src = 'D:/PycharmProjects/zbxui/static/js/clock.png';
 
     setInterval(drawScene, 1000); // loop drawScene
 });
