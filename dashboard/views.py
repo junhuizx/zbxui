@@ -45,6 +45,7 @@ def get_usergroups(group):
 class ZabbixClinet(object):
     def __init__(self, idc, address, username, password):
         self.idc = idc
+        self.address = address
         try:
             self.zbx_api = ZabbixAPI(address)
             self.zbx_api.login(username, password)
@@ -59,14 +60,20 @@ class ZabbixClinet(object):
         results = self.zbx_api.trigger.get(output=["triggerid", "description", "priority", "lastchange"],
                                            filter={"value": 1},
                                            active=True,
-                                           selectHosts="extend")
+                                           selectHosts="extend",
+                                           selectItems='extend')
 
         triggers = []
         if results:
+            import pprint
+            pprint.pprint(results[0])
             for result in results:
                 for host in result['hosts']:
                     trigger = {'idc': self.idc,
+                               'url' : self.address,
                                'host': host['host'],
+                               'itemid': result['items'][0]['itemid'],
+                               'itemtype': result['items'][0]['data_type'],
                                'priority': result['priority'],
                                'description': result['description'],
                                'lastchange': datetime.datetime.fromtimestamp((int(result['lastchange'])))}
@@ -78,14 +85,18 @@ class ZabbixClinet(object):
         results = self.zbx_api.triggerprototype.get(output=["triggerid", "description", "priority", "lastchange"],
                                            filter={"value": 1},
                                            active=True,
-                                           selectHosts="extend")
+                                           selectHosts="extend",
+                                                    selectItems='extend')
 
         triggers = []
         if results:
             for result in results:
                 for host in result['hosts']:
                     trigger = {'idc': self.idc,
+                               'url' : self.address,
                                'host': host['host'],
+                               'itemid': result['items'][0]['itemid'],
+                               'itemtype': result['items'][0]['data_type'],
                                'priority': result['priority'],
                                'description': result['description'],
                                'lastchange': datetime.datetime.fromtimestamp((int(result['lastchange'])))}
@@ -168,7 +179,10 @@ class IndexView(TemplateView):
         zabbixs = []
         issues = []
         for zabbix in settings.ZABBIX_LIST:
-            zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+            zabbixs.append(ZabbixClinet(idc=zabbix['idc'],
+                                        address=zabbix['address'],
+                                        username=zabbix['username'],
+                                        password=zabbix['password']))
 
         for zabbix in zabbixs:
             issues.extend(zabbix.trigger_get())
