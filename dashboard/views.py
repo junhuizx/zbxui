@@ -5,6 +5,7 @@ import json
 import urllib2
 import datetime
 import logging
+import MySQLdb
 
 from django.forms.utils import ErrorList
 from django.http import HttpResponse
@@ -16,6 +17,44 @@ from django.views.generic import FormView, RedirectView, TemplateView, ListView,
 from forms import UserForm
 
 from pyzabbix import ZabbixAPI
+
+
+class CustomOverView(object):
+    def __init__(self, overview):
+        self.update_time = overview[1]
+        self.vcpus = overview[2]
+        self.vcpus_used = overview[3]
+        self.memory = overview[4] * 1024 * 1024
+        self.memory_used = overview[5] * 1024 * 1024
+        self.vms = overview[6] - 4
+        self.vms_running = overview[7]
+        self.region = overview[8]
+
+
+def get_overview():
+    overviews = list()
+    conn = None
+    while conn is None:
+        try:
+            conn = MySQLdb.connect(host='127.0.0.1', user='ops', passwd='123456', db='hypervisors')
+        except Exception, error:
+            logging.error("Connect vm_data mysql error, and try again!(%s)" % str(error))
+            conn = None
+
+    cursor = conn.cursor()
+
+    sql = '''SELECT * FROM hypervisors.status ORDER BY -id limit {};'''.format(2)
+
+    cursor.execute(sql)
+    overviews_sql = cursor.fetchall()
+
+    conn.close()
+
+    for overview_sql in overviews_sql:
+        overview = CustomOverView(overview_sql)
+        overviews.append(overview)
+
+    return overviews
 
 
 def get_usergroups(group):
@@ -45,6 +84,7 @@ def get_usergroups(group):
 class ZabbixClinet(object):
     def __init__(self, idc, address, username, password):
         self.idc = idc
+        self.address = address
         try:
             self.zbx_api = ZabbixAPI(address)
             self.zbx_api.login(username, password)
@@ -52,18 +92,27 @@ class ZabbixClinet(object):
             # logging.warning(error)
             raise Exception
 
+    def user_logout(self):
+        return self.zbx_api.user.logout()
+
     def trigger_get(self):
         results = self.zbx_api.trigger.get(output=["triggerid", "description", "priority", "lastchange"],
                                            filter={"value": 1},
                                            active=True,
-                                           selectHosts="extend")
+                                           selectHosts="extend",
+                                           selectItems='extend')
 
         triggers = []
         if results:
+            import pprint
+            # pprint.pprint(results[0])
             for result in results:
                 for host in result['hosts']:
                     trigger = {'idc': self.idc,
+                               'url' : self.address,
                                'host': host['host'],
+                               'itemid': result['items'][0]['itemid'],
+                               'itemtype': result['items'][0]['data_type'],
                                'priority': result['priority'],
                                'description': result['description'],
                                'lastchange': datetime.datetime.fromtimestamp((int(result['lastchange'])))}
@@ -75,14 +124,18 @@ class ZabbixClinet(object):
         results = self.zbx_api.triggerprototype.get(output=["triggerid", "description", "priority", "lastchange"],
                                            filter={"value": 1},
                                            active=True,
-                                           selectHosts="extend")
+                                           selectHosts="extend",
+                                                    selectItems='extend')
 
         triggers = []
         if results:
             for result in results:
                 for host in result['hosts']:
                     trigger = {'idc': self.idc,
+                               'url' : self.address,
                                'host': host['host'],
+                               'itemid': result['items'][0]['itemid'],
+                               'itemtype': result['items'][0]['data_type'],
                                'priority': result['priority'],
                                'description': result['description'],
                                'lastchange': datetime.datetime.fromtimestamp((int(result['lastchange'])))}
@@ -93,19 +146,20 @@ class ZabbixClinet(object):
     def item_get(self, applications, keywords):
         results = self.zbx_api.item.get(output="extend",
                                         application=applications,
-                                        search={'key_': keywords},
-                                        sortfield='lastvalue')
+                                        search={'name': keywords},
+                                        sortfield='name')
 
-        lastvalues = []
-        if results:
-            for result in results:
-                lastvalue={'idc': self.idc,
-                           'uuid': result['name'].split(' ')[0],
-                           'lastclock': result['lastclock'],
-                           'lastvalue': result['lastvalue']}
-                lastvalues.append(lastvalue)
-
-        return lastvalues
+        return results
+        # lastvalues = []
+        # if results:
+        #     for result in results:
+        #         lastvalue={'idc': self.idc,
+        #                    'uuid': result['name'].split(' ')[0],
+        #                    'lastclock': result['lastclock'],
+        #                    'lastvalue': result['lastvalue']}
+        #         lastvalues.append(lastvalue)
+        #
+        # return lastvalues
 
     def user_create(self, user):
         '''
@@ -139,7 +193,7 @@ class ZabbixClinet(object):
 
         usrgrps = []
 
-        print user
+        # print user
 
         if user.get('usergroups'):
             for usergroup in user['usergroups']:
@@ -164,16 +218,26 @@ class IndexView(TemplateView):
         zabbixs = []
         issues = []
         for zabbix in settings.ZABBIX_LIST:
-            zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+            try:
+                zabbix = ZabbixClinet(idc=zabbix['idc'],
+                                      address=zabbix['address'],
+                                      username=zabbix['username'],
+                                      password=zabbix['password'])
+                zabbixs.append(zabbix)
+            except Exception:
+                pass
+
 
         for zabbix in zabbixs:
             issues.extend(zabbix.trigger_get())
             # issues.extend(zabbix.triggerprototype_get())
+            zabbix.user_logout()
 
         issues.sort(key=lambda k:k['lastchange'], reverse=True)
         context['issues'] = issues
         # context['updatetime'] = datetime.datetime.now()
         context['idcs'] = settings.ZABBIX_LIST
+        context['overviews'] = get_overview()
 
         return context
 
@@ -183,11 +247,20 @@ class ReloadView(View):
             zabbixs = []
             issues = []
             for zabbix in settings.ZABBIX_LIST:
-                zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+                # zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+                try:
+                    zabbix = ZabbixClinet(idc=zabbix['idc'],
+                                          address=zabbix['address'],
+                                          username=zabbix['username'],
+                                          password=zabbix['password'])
+                    zabbixs.append(zabbix)
+                except Exception:
+                    pass
 
             for zabbix in zabbixs:
                 issues.extend(zabbix.trigger_get())
                 # issues.extend(zabbix.triggerprototype_get())
+                zabbix.user_logout()
 
             issues.sort(key=lambda k:k['lastchange'], reverse=True)
 
@@ -228,8 +301,136 @@ class UserAddView(FormView):
 
             for zabbix in zabbixs:
                 zabbix.user_create(user={'username':username, 'name':name, 'tel':tele, 'email':email, 'usergroups':[get_usergroups(usergroup) for usergroup in usergroups]})
+                zabbix.user_logout()
 
         else:
             return self.form_invalid(form=form)
 
         return super(UserAddView, self).post(request, *args, **kwargs)
+
+class OverView(object):
+    def __init__(self, idc, total, running):
+        self.idc = idc
+        self.total = total
+        self.running = running
+        self.other = total - running
+
+class Speed(object):
+    def __init__(self, idc, uuid, clock, speed):
+        self.idc = idc
+        self.uuid = uuid
+        self.clock = clock
+        self.speed = speed
+
+class Top(object):
+    def __init__(self,speeds):
+        self.disk_read = self.get_top('DiskRead', speeds)
+        self.disk_write = self.get_top('DiskWrite', speeds)
+        self.interface_read = self.get_top('InterfaceRead', speeds)
+        self.interface_write = self.get_top('InterfaceWrite', speeds)
+
+    def get_top(self, keyword, speeds):
+        re_list = []
+        for speed in speeds:
+            if keyword == (speed['name'].split(' ')[1] + speed['name'].split(' ')[2]):
+                re = Speed(speed['idc'], speed['name'].split(' ')[0], speed['lastclock'], speed['lastvalue'])
+                re_list.append(re)
+
+        re_list.sort(key=lambda k:k.speed, reverse=True)
+        return re_list[0:10]
+
+
+class StaticsView(ListView):
+    template_name = 'statics.html'
+    queryset = []
+
+    def get_context_data(self, **kwargs):
+        context = super(StaticsView, self).get_context_data(**kwargs)
+
+        zabbixs =[]
+        for zabbix in settings.ZABBIX_LIST:
+            if zabbix['online'] is True:
+                zabbixs.append(ZabbixClinet(idc=zabbix['idc'], address=zabbix['address'], username=zabbix['username'], password=zabbix['password']))
+
+        overviews = []
+        # speeds = []
+        for zabbix in zabbixs:
+            instances = zabbix.item_get('Instances', 'State')
+            instances_running =[]
+            instances_deleted = []
+            for instance in instances:
+                if instance['lastvalue'] == 'running':
+                    instances_running.append(instance)
+                elif instance['lastvalue'] == 'deleted':
+                    instances_deleted.append(instance)
+                else:
+                    pass
+
+            overview = OverView(zabbix.idc, len(instances) - len(instances_deleted), len(instances_running))
+            overviews.append(overview)
+
+            zabbix.user_logout()
+
+            # speed = zabbix.item_get('Instances', 'Speed')
+            # for i in range(len(speed)):
+            #     speed[i]['idc'] = zabbix.idc
+            #
+            # speeds.extend(speed)
+        #
+        # top = Top(speeds)
+
+        context['overviews'] = overviews
+        # context['top'] = top
+
+        return context
+
+
+def get_vms_data():
+    conn = None
+    while conn is None:
+        try:
+            conn = MySQLdb.connect(host='localhost', user=settings.DATA_DB_USER,
+                                   passwd=settings.DATA_DB_PASSWD, db='tangjinjie')
+        except Exception:
+            logging.error("Connect vm_data mysql error, and try again!")
+            conn = None
+
+    cursor = conn.cursor()
+
+    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    yesterday = yesterday.strftime("%Y-%m-%d")
+
+    sql = '''
+    SELECT region, id, ip, system, interface_read, interface_write, disk_read, disk_write FROM vm_data where date="{}"
+    '''.format(yesterday)
+
+    cursor.execute(sql)
+    vms_info = cursor.fetchall()
+
+    vms = [{'region': vm_info[0], 'id': vm_info[1].strip(), 'ip': vm_info[2], 'system':vm_info[3],
+            'interface_read': vm_info[4], 'interface_write': vm_info[5],
+            'disk_read': vm_info[6], 'disk_write': vm_info[7]} for vm_info in vms_info]
+
+    return vms
+
+
+class TopView(ListView):
+    template_name = 'top.html'
+    queryset = []
+
+    def get_context_data(self, **kwargs):
+        context = super(TopView, self).get_context_data(**kwargs)
+
+        vms = get_vms_data()
+
+        top_disk_read = sorted(vms, key=lambda k: k['disk_read'], reverse=True)[:20]
+        top_disk_write = sorted(vms, key=lambda k: k['disk_write'], reverse=True)[:20]
+        top_interface_read = sorted(vms, key=lambda k: k['interface_read'], reverse=True)[:20]
+        top_interface_write = sorted(vms, key=lambda k: k['interface_write'], reverse=True)[:20]
+
+        context['disk_read'] = top_disk_read
+        context['disk_write'] = top_disk_write
+        context['interface_read'] = top_interface_read
+        context['interface_write'] = top_interface_write
+
+        return context

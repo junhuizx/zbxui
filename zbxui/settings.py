@@ -8,7 +8,7 @@ For more information on this file, see
 https://docs.djangoproject.com/en/1.8/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.8/ref/settings/
+Ghttps://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -26,13 +26,13 @@ SECRET_KEY = 'q5hiv+9gnpw(k-+uelj$3jo_4_hutm8z4=6f0^t%z^9h*^fc%!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = (
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -90,7 +90,8 @@ DATABASES = {
 
 LANGUAGE_CODE = 'zh-CN'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
+#TIME_ZONE = 'CST'
 
 USE_I18N = True
 
@@ -105,12 +106,16 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
-# ZABBIX_LIST = [{'idc':'华通一期', 'address':'http://101.227.185.101:20021/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':False},
-#                {'idc':'公司测试', 'address':'http://58.247.8.188:10007/', 'username':'Admin', 'password':'zabbix', 'online':False}
-# ]
 
-ZABBIX_LIST = [{'idc':'周浦一期', 'address':'http://114.80.52.192:30119/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':True},
-               {'idc':'斐讯一期', 'address':'http://218.245.64.3:10005/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':True},
-               {'idc':'大连一期', 'address':'http://218.60.94.16/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':True},
-               {'idc':'华通一期', 'address':'http://101.227.185.101:20021/', 'username':'Admin', 'password':'fi#$jkd!&p!a', 'online':False},
+DATA_DB_USER = 'tjj'
+DATA_DB_PASSWD = '123456'
+DATA_DB_NAME = 'tangjinjie'
+
+
+ZABBIX_LIST = [{'idc':'周浦一期', 'address':'http://114.80.52.192:30119/', 'username':'Admin', 'password':'ntx!@#123', 'online':True},
+               {'idc':'周浦二期', 'address':'http://103.36.173.13:20001/', 'username':'Admin', 'password':'ntx123456', 'online':True},
+               {'idc':'斐讯一期', 'address':'http://218.245.64.3:10005/', 'username':'Admin', 'password':'ntx!@#123', 'online':True},
+               {'idc':'斐讯二期', 'address':'http://218.245.64.180:20001/', 'username':'Admin', 'password':'ntx123456', 'online':True},
+               {'idc':'大连一期', 'address':'http://218.60.94.16/', 'username':'Admin', 'password':'ntx!@#123', 'online':True},
+               {'idc':'华通一期', 'address':'http://101.227.185.101:20005/', 'username':'Admin', 'password':'newtouch@123', 'online':True},
 ]

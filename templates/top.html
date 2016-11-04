@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static "js/jquery-multi-select/css/multi-select.css" %}" />
+{% endblock %}
+
+{% block title %}
+    <title>昨日流量Top</title>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        {% include 'top_reload.html' %}
+    </div>
+{#    {% include 'top_reload.html' %}#}
+{% endblock %}
+
+{% block js %}
+{% endblock %}

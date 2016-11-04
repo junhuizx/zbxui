@@ -1,20 +1,47 @@
+<!--div class="col-md-8">
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">各个机房概要</h3>
+        </div>
+        <div class="panel-body">
+            <div class="col-md-12">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>机房</th>
+                            <th>更新时间</th>
+                            <th>虚拟机数量(running / total)</th>
+                            <th>vcpus( used / total )</th>
+                            <th>memory( used / total )</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for overview in overviews %}
+                         <tr>
+                            <td>{{ overview.region }}</td>
+                            <td>{{ overview.update_time }}</td>
+                            <td>{{ overview.vms_running }} / {{ overview.vms }}</td>
+                            <td>{{ overview.vcpus_used }} / {{ overview.vcpus }}</td>
+                            <td> {{ overview.memory_used|filesizeformat }} / {{ overview.memory|filesizeformat }}</td>
+                         </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div-->
+
 <div class="col-md-12">
     <div class="panel panel-info">
         <div class="panel-heading">
             <h3 class="panel-title">各个机房入口</h3>
         </div>
         <div class="panel-body">
-            <div class="col-md-8">
+            <div class="col-md-12">
             {% for idc in idcs %}
                 {% if idc.online == 1 %}
                     <a role="button" href="{{ idc.address }}" target="_blank" class="btn btn-success btn-lg">{{ idc.idc }}</a>
-                {% endif %}
-            {% endfor %}
-            </div>
-            <div class="col-md-4">
-            {% for idc in idcs %}
-                {% if idc.online == 0 %}
-                    <a role="button" href="{{ idc.address }}" target="_blank" class="btn btn-warning btn-lg">{{ idc.idc }}</a>
                 {% endif %}
             {% endfor %}
             </div>

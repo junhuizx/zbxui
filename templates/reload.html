@@ -15,10 +15,13 @@
                     <th>描述</th>
                     <th>发生时间</th>
                     <th>持续时间</th>
+                    <th>Graph</th>
                 </tr>
             </thead>
             <tbody>
                 {% for issue in issues %}
+		{% if issue.priority == '0' or issue.priority  == '1'%}
+                    {% else %}
                 <tr bgcolor={{ issue.priority|issue_color }}>
                     <td bgcolor={{ issue.priority|issue_color }}> {{ issue.priority|issue_priority }} </td>
                     <td>{{ issue.idc }}</td>
@@ -26,7 +29,13 @@
                     <td>{{ issue.description }}</td>
                     <td>{{ issue.lastchange|date:'Y-m-d H:i:s'}}</td>
                     <td>{{ issue.lastchange|issue_age }}</td>
+                    {% if issue.itemtype == '0' %}
+                        <td><a href="{{ issue.url }}history.php?action=showgraph&itemids[]={{ issue.itemid }}" target="_blank">查看图表</a></td>
+                    {% else %}
+                        <td>没有图表</td>
+                    {% endif %}
                 </tr>
+		{% endif %}
                 {% endfor %}
             </tbody>
         </table>

@@ -1,0 +1,130 @@
+<div class="top-reload">
+    <div class="row">
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Disk Read Total
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Region</th>
+                            <th>UUID</th>
+                            <th>IP</th>
+                            <th>System</th>
+                            <th>Data</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for one in disk_read %}
+                        <tr>
+                            <td>{{ one.region }}</td>
+                            <td>{{ one.id }}</td>
+                            <td>{{ one.ip }}</td>
+                            <td>{{ one.system }}</td>
+                            <td>{{ one.disk_read|filesizeformat }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Disk Write Total
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Region</th>
+                            <th>UUID</th>
+                            <th>IP</th>
+                            <th>System</th>
+                            <th>Data</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for one in disk_write %}
+                        <tr>
+                            <td>{{ one.region }}</td>
+                            <td>{{ one.id }}</td>
+                            <td>{{ one.ip }}</td>
+                            <td>{{ one.system }}</td>
+                            <td>{{ one.disk_write|filesizeformat }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Interface Recivce Total
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Region</th>
+                            <th>UUID</th>
+                            <th>IP</th>
+                            <th>System</th>
+                            <th>Data</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for one in interface_read %}
+                        <tr>
+                            <td>{{ one.region }}</td>
+                            <td>{{ one.id }}</td>
+                            <td>{{ one.ip }}</td>
+                            <td>{{ one.system }}</td>
+                            <td>{{ one.interface_read|filesizeformat }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    Interface Trasmit Total
+                </header>
+                <div class="panel-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Region</th>
+                            <th>UUID</th>
+                            <th>IP</th>
+                            <th>System</th>
+                            <th>Data</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for one in interface_write %}
+                        <tr>
+                            <td>{{ one.region }}</td>
+                            <td>{{ one.id }}</td>
+                            <td>{{ one.ip }}</td>
+                            <td>{{ one.system }}</td>
+                            <td>{{ one.interface_write|filesizeformat }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

@@ -23,7 +23,7 @@ from dashboard import urls as zabbix_urls
 
 
 urlpatterns = [
-    # url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
     url(r'^$', RedirectView.as_view(url=reverse_lazy('zabbix:index'), permanent=True), name='index'),
     url(r'^zabbix/',include(zabbix_urls, namespace='zabbix')),
 ]
