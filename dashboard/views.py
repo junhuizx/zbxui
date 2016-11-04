@@ -104,8 +104,6 @@ class ZabbixClinet(object):
 
         triggers = []
         if results:
-            import pprint
-            # pprint.pprint(results[0])
             for result in results:
                 for host in result['hosts']:
                     trigger = {'idc': self.idc,
@@ -150,16 +148,6 @@ class ZabbixClinet(object):
                                         sortfield='name')
 
         return results
-        # lastvalues = []
-        # if results:
-        #     for result in results:
-        #         lastvalue={'idc': self.idc,
-        #                    'uuid': result['name'].split(' ')[0],
-        #                    'lastclock': result['lastclock'],
-        #                    'lastvalue': result['lastvalue']}
-        #         lastvalues.append(lastvalue)
-        #
-        # return lastvalues
 
     def user_create(self, user):
         '''
@@ -225,19 +213,24 @@ class IndexView(TemplateView):
                                       password=zabbix['password'])
                 zabbixs.append(zabbix)
             except Exception:
-                pass
+                issues.append({'idc': zabbix['idc'],
+                               'url' : zabbix['address'],
+                               'host': 'zabbix server',
+                               'itemid': '99999999',
+                               'itemtype': '1',
+                               'priority': '5',
+                               'description': 'zabbix server API 无法正常访问',
+                               'lastchange': datetime.datetime.now()})
 
 
         for zabbix in zabbixs:
             issues.extend(zabbix.trigger_get())
-            # issues.extend(zabbix.triggerprototype_get())
             zabbix.user_logout()
 
         issues.sort(key=lambda k:k['lastchange'], reverse=True)
         context['issues'] = issues
-        # context['updatetime'] = datetime.datetime.now()
         context['idcs'] = settings.ZABBIX_LIST
-        context['overviews'] = get_overview()
+        # context['overviews'] = get_overview()
 
         return context
 
@@ -255,7 +248,14 @@ class ReloadView(View):
                                           password=zabbix['password'])
                     zabbixs.append(zabbix)
                 except Exception:
-                    pass
+                    issues.append({'idc': zabbix['idc'],
+                                   'url': zabbix['address'],
+                                   'host': 'zabbix server',
+                                   'itemid': '99999999',
+                                   'itemtype': '1',
+                                   'priority': '5',
+                                   'description': 'zabbix server API 无法正常访问',
+                                   'lastchange': datetime.datetime.now()})
 
             for zabbix in zabbixs:
                 issues.extend(zabbix.trigger_get())

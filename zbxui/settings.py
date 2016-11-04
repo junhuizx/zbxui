@@ -112,10 +112,10 @@ DATA_DB_PASSWD = '123456'
 DATA_DB_NAME = 'tangjinjie'
 
 
-ZABBIX_LIST = [{'idc':'周浦一期', 'address':'http://114.80.52.192:30119/', 'username':'Admin', 'password':'ntx!@#123', 'online':True},
-               {'idc':'周浦二期', 'address':'http://103.36.173.13:20001/', 'username':'Admin', 'password':'ntx123456', 'online':True},
-               {'idc':'斐讯一期', 'address':'http://218.245.64.3:10005/', 'username':'Admin', 'password':'ntx!@#123', 'online':True},
-               {'idc':'斐讯二期', 'address':'http://218.245.64.180:20001/', 'username':'Admin', 'password':'ntx123456', 'online':True},
-               {'idc':'大连一期', 'address':'http://218.60.94.16/', 'username':'Admin', 'password':'ntx!@#123', 'online':True},
-               {'idc':'华通一期', 'address':'http://101.227.185.101:20005/', 'username':'Admin', 'password':'newtouch@123', 'online':True},
+ZABBIX_LIST = [{'idc':'周浦一期', 'address':'http://114.80.52.192:30119/', 'username':'Admin', 'password':'123456', 'online':True},
+               {'idc':'周浦二期', 'address':'http://103.36.173.13:20001/', 'username':'Admin', 'password':'123456', 'online':True},
+               {'idc':'斐讯一期', 'address':'http://218.245.64.3:10005/', 'username':'Admin', 'password':'123456', 'online':True},
+               {'idc':'斐讯二期', 'address':'http://218.245.64.180:20001/', 'username':'Admin', 'password':'123456', 'online':True},
+               {'idc':'大连一期', 'address':'http://218.60.94.16/', 'username':'Admin', 'password':'123456', 'online':True},
+               {'idc':'华通一期', 'address':'http://101.227.185.101:20005/', 'username':'Admin', 'password':'123456', 'online':True},
 ]
